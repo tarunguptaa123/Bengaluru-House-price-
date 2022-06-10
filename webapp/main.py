@@ -2,9 +2,40 @@ import streamlit as st
 import pickle
 import numpy as np
 # Title
-import sklearn
+
 import pandas as pd
 import matplotlib.pyplot as plt
+#st.container()
+st.set_page_config(layout="wide")
+with open('style.css') as f:
+    st.markdown(f'<style>{f.read()}</style>',unsafe_allow_html=True)
+    animation_symbol='❅'
+st.markdown(f"""<div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>
+                <div class="snowflake">{animation_symbol}</div>""",unsafe_allow_html=True)
+
+
+x = 1
+
+
+
 
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
@@ -17,10 +48,11 @@ data2=pd.read_csv('data2.csv')
 
 
 
-st.title("REAL ESTATE PRICE PREDICTOR")
-bhk=0
+st.title("Bangalore Property Price Prediction")
+#bhk=0
 # Header
-st.header("This webapp can predict price of bengluru city")
+
+st.balloons()
 locality = st.selectbox('Enter a locality:',('Electronic City Phase II', 'Chikka Tirupathi', 'Uttarahalli',
        'Lingadheeranahalli', 'Kothanur', 'Whitefield', 'Old Airport Road',
        'Rajaji Nagar', 'Marathahalli', 'other', '7th Phase JP Nagar',
@@ -88,9 +120,19 @@ locality = st.selectbox('Enter a locality:',('Electronic City Phase II', 'Chikka
        'Bharathi Nagar', 'HAL 2nd Stage', 'Kadubeesanahalli'))
 st.write('You selected:', locality)
 
-sqft=st.number_input("enter sqft of house")
-bathroom=st.number_input("enter number of bathroom",step=1)
-bhk=st.number_input("enter bhk size",step=1)
+#sqft=st.number_input("Area (Square Feet)")
+sqft = st.slider('Area (Square Feet)', 0, 10000, 1000)
+#st.write("I'm ", age, 'years old')
+
+options=['1', '2', '3','4','5']
+bathroom = st.slider("Bathrooms",0,6,2 )
+#bathroom=st.number_input"**Bathrooms**",step=1)
+
+bhk = st.slider("BHK",0,6,2)
+
+bhk=int(bhk)
+bathroom=int(bathroom)
+#bhk=st.number_input("**BHK**",step=1)
 
 
 
@@ -109,7 +151,7 @@ def predict_price(location,sqft,bath,bhk):
     return pickled_model.predict([X])[0]
 
 
-import requests, json
+import requests
 from bs4 import BeautifulSoup
 
 # url variable store url
@@ -139,32 +181,49 @@ V=soup.find('div',class_="BNeawe deIvCb AP7Wnd")
 
 
 
-
-if st.button('PRESS'):
+if st.button('Estimate Price'):
     if bhk !=0:
-       st.markdown("predicted price is aprrox {} lakhs.".format(predict_price(locality,sqft,bathroom,bhk)))
+        result=predict_price(locality,sqft,bathroom,bhk)
+        if result < 0:
+            st.subheader("No property of these requirements are available")
+        else:
+            if result > 100:
+                result = round(result / 100, 2)
+                result = str(result) + ' Crore'
+            else:
+                result = str(result) + ' Lakhs'
 
-       st.subheader("Distance of {} from Bangalore City Railway Station".format(locality))
+            with st.expander("Result ", expanded=True):
+                st.subheader("predicted price is aprrox {} ".format(result))
 
-       if (t==None ):
-              st.text("data not found")
-       else:
-              st.text(t.text)
+st.text("Scraped button will gives more information about the selected location ")
+if st.sidebar.button('Scraped'):
+    with st.expander("Railway ", expanded=True):
+        st.subheader("Distance of {} from Bangalore City Railway Station".format(locality))
+        if (t == None):
+            st.text("data not found")
+        else:
+            st.text(t.text)
+
+    with st.expander("Airport ", expanded=True):
+        st.subheader("Distance of {} from Bangalore City Airport".format(locality))
+        if (V == None):
+            st.text("data not found")
+
+        else:
+            st.text(V.text)
 
 
-       st.subheader("Distance of {} from Bangalore City Airport".format(locality))
-       if(V==None):
-              st.text("data not found")
+st.text("Scatter button will show a Scatter plot")
+if st.sidebar.button('Scatter'):
+        bhk2 = data2[(data2.location == locality) & (data2.bhk == bhk)]
+        fig, ax = plt.subplots()
+        ax.scatter(bhk2.total_sqft, bhk2.price, color="blue", label="{} bhk".format(bhk), s=50)
+        plt.title("price(in lakhs) vs total SQFT for {} BHK in {}".format(bhk, locality))
+        plt.xlabel('sqft')
+        plt.ylabel('price')
+        with st.expander("Scatter", expanded=True):
+            st.pyplot()
 
-       else:
-              st.text(V.text)
-
-       bhk2=data2[(data2.location==locality)&(data2.bhk==bhk)]
-       fig, ax = plt.subplots()
-       ax.scatter(bhk2.total_sqft,bhk2.price,color="blue",label="{} bhk".format(bhk),s=50)
-       plt.title("price(in lakhs) vs total SQFT for {} BHK in {}".format(bhk,locality))
-       plt.xlabel('sqft')
-       plt.ylabel('price')
-       st.pyplot()
 
 
